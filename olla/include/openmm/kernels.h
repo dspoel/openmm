@@ -53,6 +53,7 @@
 #include "openmm/GBSAOBCForce.h"
 #include "openmm/HarmonicAngleForce.h"
 #include "openmm/HarmonicBondForce.h"
+#include "openmm/MorseBondForce.h"
 #include "openmm/KernelImpl.h"
 #include "openmm/LangevinIntegrator.h"
 #include "openmm/MonteCarloBarostat.h"
@@ -315,6 +316,42 @@ public:
      * @param force      the HarmonicBondForce to copy the parameters from
      */
     virtual void copyParametersToContext(ContextImpl& context, const HarmonicBondForce& force) = 0;
+};
+
+/**
+ * This kernel is invoked by MorseBondForce to calculate the forces acting on the system and the
+ * energy of the system
+ */
+class CalcMorseBondForceKernel : public KernelImpl {
+public:
+    static std::string Name() {
+        return "CalcMorseBondForce";
+    }
+    CalcMorseBondForceKernel(std::string name, const Platform& platform) : KernelImpl(name, platform) {
+    }
+    /**
+     * Initialize the kernel.
+     * 
+     * @param system    the System this kernel will be applied to
+     * @param force     the MorseBondForce this kernel will be used for
+     */
+    virtual void initialize(const System& system, const MorseBondForce& force) = 0;
+    /**
+     * Execute the kernel to calculate the forces and/or energy.
+     * 
+     * @param context        the context in which to execute this kernel
+     * @param includeForces  true if forces should be calculated
+     * @param includeEnergy  true if the energy should be calculated
+     * @return the potential energy due to the force
+     */
+    virtual double execute(ContextImpl& context, bool includeForces, bool includeEnergy) = 0;
+    /**
+     * Copy changed parameters over to a context.
+     * 
+     * @param context   the context to copy parameters to
+     * @param force     the MorseBondForce to copy the parameters from
+     */
+    virtual void copyParametersToContext(ContextImpl& context, const MorseBondForce& force) = 0;
 };
 
 /**
