@@ -46,6 +46,7 @@ ReferencePlatform::ReferencePlatform() {
     registerKernelFactory(ApplyConstraintsKernel::Name(), factory);
     registerKernelFactory(VirtualSitesKernel::Name(), factory);
     registerKernelFactory(CalcHarmonicBondForceKernel::Name(), factory);
+    registerKernelFactory(CalcMorseBondForceKernel::Name(), factory);
     registerKernelFactory(CalcCustomBondForceKernel::Name(), factory);
     registerKernelFactory(CalcHarmonicAngleForceKernel::Name(), factory);
     registerKernelFactory(CalcCustomAngleForceKernel::Name(), factory);

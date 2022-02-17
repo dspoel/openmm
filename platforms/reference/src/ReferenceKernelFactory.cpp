@@ -52,6 +52,8 @@ KernelImpl* ReferenceKernelFactory::createKernelImpl(std::string name, const Pla
         return new ReferenceCalcCustomNonbondedForceKernel(name, platform);
     if (name == CalcHarmonicBondForceKernel::Name())
         return new ReferenceCalcHarmonicBondForceKernel(name, platform);
+    if (name == CalcMorseBondForceKernel::Name())
+        return new ReferenceCalcMorseBondForceKernel(name, platform);
     if (name == CalcCustomBondForceKernel::Name())
         return new ReferenceCalcCustomBondForceKernel(name, platform);
     if (name == CalcHarmonicAngleForceKernel::Name())
