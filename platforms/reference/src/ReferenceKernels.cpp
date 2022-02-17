@@ -52,6 +52,7 @@
 #include "ReferenceCustomTorsionIxn.h"
 #include "ReferenceGayBerneForce.h"
 #include "ReferenceHarmonicBondIxn.h"
+#include "ReferenceMorseBondIxn.h"
 #include "ReferenceLangevinMiddleDynamics.h"
 #include "ReferenceLJCoulomb14.h"
 #include "ReferenceLJCoulombIxn.h"
@@ -394,6 +395,55 @@ void ReferenceCalcHarmonicBondForceKernel::copyParametersToContext(ContextImpl& 
         bondIndexArray[i][1] = particle2;
         bondParamArray[i][0] = length;
         bondParamArray[i][1] = k;
+    }
+}
+
+void ReferenceCalcMorseBondForceKernel::initialize(const System& system, const MorseBondForce& force) {
+    numBonds = force.getNumBonds();
+    bondIndexArray.resize(numBonds, vector<int>(2));
+    bondParamArray.resize(numBonds, vector<double>(3));
+    for (int i = 0; i < numBonds; ++i) {
+        int particle1, particle2;
+        double length, k, d;
+        force.getBondParameters(i, particle1, particle2, length, k, d);
+        bondIndexArray[i][0] = particle1;
+        bondIndexArray[i][1] = particle2;
+        bondParamArray[i][0] = length;
+        bondParamArray[i][1] = k;
+        bondParamArray[i][2] = d;
+    }
+    usePeriodic = force.usesPeriodicBoundaryConditions();
+}
+
+double ReferenceCalcMorseBondForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
+    vector<Vec3>& posData = extractPositions(context);
+    vector<Vec3>& forceData = extractForces(context);
+    double energy;
+    ReferenceBondForce refBondForce;
+    ReferenceMorseBondIxn morseBond;
+    if (usePeriodic)
+        morseBond.setPeriodic(extractBoxVectors(context));
+    refBondForce.calculateForce(numBonds, bondIndexArray, posData, bondParamArray, forceData, includeEnergy ? &energy : NULL, morseBond);
+    return energy;
+}
+
+void ReferenceCalcMorseBondForceKernel::copyParametersToContext(ContextImpl& context, const MorseBondForce& force) {
+    if (numBonds != force.getNumBonds())
+        throw OpenMMException("updateParametersInContext: The number of bonds has changed");
+
+    // Record the values.
+
+    for (int i = 0; i < numBonds; ++i) {
+        int particle1, particle2;
+        double length, k, d;
+        force.getBondParameters(i, particle1, particle2, length, k, d);
+        if (particle1 != bondIndexArray[i][0] || particle2 != bondIndexArray[i][1])
+            throw OpenMMException("updateParametersInContext: The set of particles in a bond has changed");
+        bondIndexArray[i][0] = particle1;
+        bondIndexArray[i][1] = particle2;
+        bondParamArray[i][0] = length;
+        bondParamArray[i][1] = k;
+        bondParamArray[i][2] = d;
     }
 }
 
